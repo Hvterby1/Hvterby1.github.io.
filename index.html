@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Style Toggle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background-color: #000000;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+            color: #ffffff;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .done-message {
+            display: none;
+            font-size: 2.5rem;
+            color: #ffffff;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .changing-text {
+            display: none;
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin-top: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .final-message {
+            display: none;
+            font-size: 3rem;
+            color: #ffffff;
+            font-family: 'Viper', sans-serif; /* Шрифт вайперов */
+            font-weight: bold;
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        /* Анимации для появляющихся надписей */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Стилизация переключателя в стиле iOS */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #333333;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #0071e3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .hidden {
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.5s ease;
+            pointer-events: none;
+        }
+
+        .loader {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0071e3;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h1 class="main-text">попустить урод сквад</h1>
+            <label class="switch">
+                <input type="checkbox" id="toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="loader" id="loader"></div>
+        <h1 class="done-message">Готово</h1>
+        <h2 class="changing-text" id="changingText"></h2>
+        <h1 class="final-message" id="finalMessage">Металл Сквад</h1>
+    </div>
+
+    <!-- Звук щелчка -->
+    <audio id="clickSound">
+        <source src="https://assets.mixkit.co/active_storage/sfx/1127/1127-preview.mp3" type="audio/mpeg">
+        Ваш браузер не поддерживает аудио элемент.
+    </audio>
+
+    <!-- Звук завершения -->
+    <audio id="completionSound">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2993/2993-preview.mp3" type="audio/mpeg">
+        Ваш браузер не поддерживает аудио элемент.
+    </audio>
+
+    <!-- Музыка -->
+    <audio id="music" loop>
+        <source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg">
+        Ваш браузер не поддерживает аудио элемент.
+    </audio>
+
+    <script>
+        const toggle = document.getElementById('toggle');
+        const mainText = document.querySelector('.main-text');
+        const slider = document.querySelector('.slider');
+        const content = document.querySelector('.content');
+        const doneMessage = document.querySelector('.done-message');
+        const loader = document.getElementById('loader');
+        const clickSound = document.getElementById('clickSound');
+        const completionSound = document.getElementById('completionSound');
+        const music = document.getElementById('music');
+        const changingText = document.getElementById('changingText');
+        const finalMessage = document.getElementById('finalMessage');
+
+        const phrases = [
+            "сир пиглин",
+            "чачка",
+            "швапс",
+            "бейсджи",
+            "виникар",
+            "ляляшка",
+            "чмоши",
+            "раскумар",
+            "яйцефонк",
+            "кайзер",
+            "лорд артемий",
+            "лолошарк"
+        ];
+
+        const animations = [
+            "fadeInUp",
+            "zoomIn",
+            "slideInLeft",
+            "slideInRight"
+        ];
+
+        toggle.addEventListener('change', function() {
+            if (this.checked) {
+                // Воспроизведение звука щелчка
+                clickSound.play();
+
+                // Прячем контент и показываем загрузчик
+                content.classList.add('hidden');
+                loader.style.display = 'block';
+
+                // Через 3 секунды показываем "Готово"
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    doneMessage.style.display = 'block';
+                    // Воспроизведение звука завершения
+                    completionSound.play();
+                    // Включаем музыку
+                    music.play();
+
+                    // Через 1 секунду запускаем смену надписей
+                    setTimeout(() => {
+                        let index = 0;
+                        const interval = setInterval(() => {
+                            if (index < phrases.length) {
+                                changingText.textContent = phrases[index];
+                                changingText.style.display = 'block';
+                                // Применяем случайную анимацию
+                                const animation = animations[Math.floor(Math.random() * animations.length)];
+                                changingText.style.animation = `${animation} 0.5s ease forwards`;
+                                index++;
+                            } else {
+                                clearInterval(interval);
+                                // Скрываем все надписи и показываем финальное сообщение
+                                doneMessage.style.display = 'none';
+                                changingText.style.display = 'none';
+                                finalMessage.style.display = 'block';
+                            }
+                        }, 2000); // Интервал 2 секунды
+                    }, 1000);
+                }, 3000);
+            } else {
+                // Возвращаем всё в исходное состояние
+                doneMessage.style.display = 'none';
+                changingText.style.display = 'none';
+                finalMessage.style.display = 'none';
+                content.classList.remove('hidden');
+                // Останавливаем музыку
+                music.pause();
+                music.currentTime = 0;
+                // Воспроизведение звука щелчка
+                clickSound.play();
+            }
+        });
+    </script>
+</body>
+</html>
